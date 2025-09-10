@@ -4,9 +4,10 @@ import entities.Author
 import entities.Book
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.WindowAdapter
@@ -21,7 +22,7 @@ import kotlin.concurrent.thread
 
 object Display {
 
-    private val scope = CoroutineScope(CoroutineName("my scope"))
+    private val scope = CoroutineScope(CoroutineName("my scope") + Dispatchers.Default)
 
     private val infoArea = JTextArea().apply {
         isEditable = false
@@ -67,14 +68,24 @@ object Display {
         startTimer()
     }
 
+    private suspend fun longOperation() {
+        withContext(Dispatchers.Default) {
+            mutableListOf<Int>().apply {
+                repeat(300_000) {
+                    add(0, it)
+                }
+            }
+        }
+    }
+
     private suspend fun loadBook(): Book {
-        delay(3000)
+        longOperation()
         return Book("1983", 1945, "Dystopia")
 
     }
 
     private suspend fun loadAuthor(book: Book): Author {
-        delay(3000)
+        longOperation()
         return Author("George Orwell", "British writer and journalist!")
     }
 
