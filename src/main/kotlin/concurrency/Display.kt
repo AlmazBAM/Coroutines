@@ -10,9 +10,9 @@ import javax.swing.*
 
 object Display {
 
-//    private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    //    private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val dispatcher = Dispatchers.IO.limitedParallelism(1)
-    private val scope = CoroutineScope(CoroutineName("my scope") + dispatcher)
+    private val scope = CoroutineScope(dispatcher)
 
     private val infoArea = JTextArea().apply {
         isEditable = false
@@ -22,17 +22,17 @@ object Display {
         addActionListener {
             isEnabled = false
             infoArea.text = "Loading book...\n"
-            val jobList = mutableListOf<Job>()
+            val jobList = mutableListOf<Deferred<Book>>()
             repeat(10) {
-                scope.launch {
+                scope.async {
                     val book = loadBook()
-                    infoArea.append("Book $it: ${book.title}, ${book.year}, ${book.genre}\n\n")
+                    book
                 }.also { job -> jobList.add(job) }
-
-                scope.launch {
-                    jobList.joinAll()
-                    isEnabled = true
-                }
+            }
+            scope.launch {
+                val books = jobList.awaitAll()
+                println(books.joinToString(", "))
+                isEnabled = true
             }
         }
     }
