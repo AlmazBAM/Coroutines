@@ -3,35 +3,29 @@ package exceptions
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 
 private val dispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
-private val exceptionHandler = CoroutineExceptionHandler { context, throwable ->
+private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
     println("Catched exception ${throwable.message}")
 }
 private val scope = CoroutineScope(dispatcher + exceptionHandler)
 
 fun main() {
 
-    scope.launch {
-        method()
-//            runCatching {
-//                method()
-//            }.onSuccess {
-//                println("success")
-//            }.onFailure {
-//                println("failure")
-//            }
-
+    scope.launch() {
+        async {
+             method()
+        }
     }
 
-    scope.launch {
+    scope.launch() {
         method2()
     }
-
 }
 
 suspend fun method(): String {
@@ -39,7 +33,7 @@ suspend fun method(): String {
     error("Some error 1")
 }
 
-suspend fun method2()   {
+suspend fun method2() {
     delay(5000)
     println("Some error 2")
 }
